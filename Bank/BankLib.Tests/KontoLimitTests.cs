@@ -110,5 +110,30 @@ namespace BankLib.Tests
             konto.Wplata(10m);
             Assert.AreEqual(160m, konto.Bilans); 
         }
+
+        [TestMethod]
+        public void DegraduajDoKontaStandardowego_ZDodatnimBilansem_ZwracaPoprawnieIZabezpieczaKopia()
+        {
+            var kontoLimit = new KontoLimit("Piotr Nowacki", 100m, 50m);
+            var standardowe = kontoLimit.DegraduajDoKontaStandardowego();
+
+            Assert.IsNotNull(standardowe);
+            Assert.AreEqual("Piotr Nowacki", standardowe.Nazwa);
+            // 100 bazowego kapitału trafia do nowego konta
+            Assert.AreEqual(100m, standardowe.Bilans);
+
+            // Stary obiekt powinien być zablokowany i po wyzerowaniu bazy mieć bilans = limitowi (gdyż Bilans sumuje kapitał + limit)
+            Assert.IsTrue(kontoLimit.Zablokowane);
+            Assert.AreEqual(50m, kontoLimit.Bilans); // kapitał 0 + 50 limit
+        }
+
+        [TestMethod]
+        public void DegraduajDoKontaStandardowego_ZUjemnymBilansem_RzucaWyjatek()
+        {
+            var kontoLimit = new KontoLimit("Piotr Nowacki", 0m, 50m);
+            kontoLimit.Wyplata(30m); // Powoduje że rezerwa bazowa w konto wpada na minusie = brak spłaty limitu
+
+            Assert.Throws<InvalidOperationException>(() => kontoLimit.DegraduajDoKontaStandardowego());
+        }
     }
 }

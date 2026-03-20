@@ -100,5 +100,23 @@ namespace BankLib
                 bilans -= kwota;
             }
         }
+
+        public Konto DegraduajDoKontaStandardowego()
+        {
+            if (bilans < 0)
+            {
+                throw new InvalidOperationException("Nie można zmienić na konto standardowe: bilans jest ujemny (nieuregulowany debet).");
+            }
+            
+            // Rezygnujemy z debetu, tworzymy nowe zwykłe Konto ze stanem faktycznym
+            var noweKonto = new Konto(this.klient, this.bilans);
+            
+            // Opcjonalnie blokujemy to konto Plus, żeby nie było podwójnie używane
+            this.BlokujKonto();
+            // Lub wyzerowujemy mu bilans:
+            this.bilans = 0;
+            
+            return noweKonto;
+        }
     }
 }

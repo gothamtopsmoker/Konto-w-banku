@@ -115,5 +115,24 @@ namespace BankLib
         {
             konto.OdblokujKonto();
         }
+
+        public Konto DegraduajDoKontaStandardowego()
+        {
+            if (konto.Bilans < 0)
+            {
+                throw new InvalidOperationException("Nie można zmienić na konto standardowe: posiadany bilans podaje niespłacony debet.");
+            }
+            
+            // Rezygnujemy z limitu i zwracamy zwykłe konto (kopia obydwu - klienta i bilansu)
+            // Przy założeniu że 'konto' jest ukryte i ma modyfikator na stan - po prostu tworzymy i zwracamy "bazę".
+            var wyciagnieteKonto = new Konto(this.Nazwa, this.konto.Bilans);
+            
+            // Opcjonalnie usuwamy odniesienie w tym obiekcie, i go blokujemy
+            this.konto.BlokujKonto();
+            this.konto.bilans = 0;
+            
+            return wyciagnieteKonto;
+        }
+
     }
 }

@@ -80,5 +80,31 @@ namespace BankLib.Tests
             var ex = Assert.Throws<InvalidOperationException>(() => konto.Wplata(50m));
             Assert.AreEqual("Operacja niedozwolona: konto jest zablokowane z innego powodu.", ex.Message);
         }
+
+        [TestMethod]
+        public void DegraduajDoKontaStandardowego_ZDodatnimBilansem_ZwracaKontoPrawidlowoIZeruje()
+        {
+            var kontoPlus = new KontoPlus("Jan Kowalski", 100m, 50m);
+            var standardowe = kontoPlus.DegraduajDoKontaStandardowego();
+
+            Assert.IsNotNull(standardowe);
+            Assert.AreEqual("Jan Kowalski", standardowe.Nazwa);
+            Assert.AreEqual(100m, standardowe.Bilans);
+            
+            // Stare konto zablokowane i wyzerowane
+            Assert.IsTrue(kontoPlus.Zablokowane);
+            // Ponieważ dostepnyLimit=true, Bilans KontoPlus to bilans (0) + limit (50) = 50.
+            // Sprawdźmy to:
+            Assert.AreEqual(50m, kontoPlus.Bilans);
+        }
+
+        [TestMethod]
+        public void DegraduajDoKontaStandardowego_ZUjemnymBilansem_RzucaWyjatek()
+        {
+            var kontoPlus = new KontoPlus("Jan Kowalski", 0m, 50m);
+            kontoPlus.Wyplata(30m); // Wpędza w debet, bilans fizyczny wynosi -30m
+
+            Assert.Throws<InvalidOperationException>(() => kontoPlus.DegraduajDoKontaStandardowego());
+        }
     }
 }
