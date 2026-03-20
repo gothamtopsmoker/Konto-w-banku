@@ -80,4 +80,39 @@ catch (Exception ex)
     Console.WriteLine($"[Błąd]: {ex.Message}");
 }
 
+// 4. Transformacje kont (Upgrade / Downgrade)
+Console.WriteLine("\n--- Transformacje (Przejścia) kont ---");
+
+Console.WriteLine("\n1. Upgrade z Konto Standardowe na KontoPlus");
+Konto klientDoZmiany = new Konto("Tomasz Molenda", 100m);
+Console.WriteLine($"Stan początkowy przed zmianą - Właściciel: {klientDoZmiany.Nazwa}, Bilans: {klientDoZmiany.Bilans:C}");
+
+// "Ręczny" Upgrade: Przerzucamy środki do nowego KontaPlus i blokujemy stare
+KontoPlus klientPlus = new KontoPlus(klientDoZmiany.Nazwa, klientDoZmiany.Bilans, 500m /* limit debetowy */);
+klientDoZmiany.Wyplata(klientDoZmiany.Bilans);
+klientDoZmiany.BlokujKonto();
+Console.WriteLine($"Konto zmieniło typ! Nowe KontoPlus - Limit: {klientPlus.LimitDebetowy:C}, Zablokowane stare konto: {klientDoZmiany.Zablokowane}");
+
+Console.WriteLine("\n2. Downgrade z KontoPlus do Konto Standardowe");
+Console.WriteLine($"Degradujemy KontoPlus użytkownika {kontoPlus.Nazwa} (Aktualny bilans całkowity z limitem: {kontoPlus.Bilans:C})");
+Konto zdegradowaneKonto = kontoPlus.DegraduajDoKontaStandardowego();
+
+Console.WriteLine($"Degradacja udana! Nowe Konto Standardowe ma bilans: {zdegradowaneKonto.Bilans:C}");
+Console.WriteLine($"Czy stary obiekt KontoPlus został zablokowany? {kontoPlus.Zablokowane}");
+
+Console.WriteLine("\n3. Próba downgrade dla KontoLimit na debecie");
+KontoLimit zadluzoneKonto = new KontoLimit("Zadłużony Klient", 0m, 100m);
+zadluzoneKonto.Wyplata(50m); // Generuje ujemny kapitał bazowy
+Console.WriteLine($"Rozpoczynamy z udanym debetem. Środki odblokowane z limitu (zostało do wypłaty): {zadluzoneKonto.Bilans:C}");
+
+try
+{
+    Console.WriteLine("Próbujemy zrezygnować z debetu (degradować) bez spłaty...");
+    Konto uregulowaneKonto = zadluzoneKonto.DegraduajDoKontaStandardowego();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Błąd degradacji]: {ex.Message}");
+}
+
 Console.WriteLine("\n=== KONIEC SYMULACJI ===");
